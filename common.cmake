@@ -20,8 +20,10 @@ if(NOT DEFINED MLIB_COMMON_CMAKE_INCLUDE_GUARD)
     endif()
 
 
-    # add the cmake folder to module path for custom find scripts
-    LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+    # add the cmake folder to module path for custom find scripts to likely positions
+    LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/extern/cmake" )
+    LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" )
+
 
 
     # setup basics, note, warnings are a per target property
