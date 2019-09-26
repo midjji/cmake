@@ -21,9 +21,12 @@ if(NOT DEFINED MLIB_COMMON_CMAKE_INCLUDE_GUARD)
 
 
     # add the cmake folder to module path for custom find scripts to likely positions
+
     LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/extern/mlib/extern/cmake" )
+    LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/mlib/extern/cmake" )
     LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/extern/cmake" )
     LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" )
+
 
 
 
@@ -141,9 +144,9 @@ if(NOT DEFINED MLIB_COMMON_CMAKE_INCLUDE_GUARD)
 
     endmacro()
 
-    macro( ConfigureWarnings target)
+    macro(target_configure_warnings target)
         WarningConfig()
-        target_add_compile_options(target ${WARNINGS})
+        target_compile_options(${target} PRIVATE ${WARNINGS})
     endmacro()
 
 
@@ -565,16 +568,5 @@ if(NOT DEFINED MLIB_COMMON_CMAKE_INCLUDE_GUARD)
         endforeach()
         message("")
     endmacro()
-
-
-
-
-
-
-
-
-
-
-
 
 endif(NOT DEFINED MLIB_COMMON_CMAKE_INCLUDE_GUARD)

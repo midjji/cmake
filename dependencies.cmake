@@ -7,26 +7,29 @@ if(NOT DEFINED MLIB_DEPENDENCIES_CMAKE_INCLUDE_GUARD)
     # the standard mlib dependencies
 
     macro(FIND_FILESYSTEM)
-        # filesystem will be a pain in the ass for a while
-        # TODO fix the namespace so its always just std::fs not std::experimental::fs...
-        # TODO fix the FINDMODULE thingy...
+        if(NOT DEFINED FIND_FILESYSTEM_GUARD)
+            set(FIND_FILESYSTEM_GUARD TRUE)
+            # filesystem will be a pain in the ass for a while
+            # TODO fix the namespace so its always just std::fs not std::experimental::fs...
+            # TODO fix the FINDMODULE thingy...
 
-        #if(TARGET std::filesystem)        return()    endif()
+            #if(TARGET std::filesystem)        return()    endif()
 
-        add_library(stdfs INTERFACE )
-        target_compile_features(stdfs INTERFACE cxx_std_14)
+            add_library(stdfs INTERFACE )
+            target_compile_features(stdfs INTERFACE cxx_std_14)
 
-        if(CMAKE_COMPILER_IS_GNUCXX)
-            set(Filesystem_FOUND TRUE)
-            target_link_libraries(stdfs INTERFACE -lstdc++fs)
-        endif()
-        if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-            set(Filesystem_FOUND TRUE)
-            target_link_libraries(stdfs INTERFACE -lstdc++fs)
-            #target_link_libraries(stdfs INTERFACE -lc++fs)
-        endif()
-        if(NOT Filesystem_FOUND)
-            message(FATAL_ERROR "std::experimental::filesystem missing")
+            if(CMAKE_COMPILER_IS_GNUCXX)
+                set(Filesystem_FOUND TRUE)
+                target_link_libraries(stdfs INTERFACE -lstdc++fs)
+            endif()
+            if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+                set(Filesystem_FOUND TRUE)
+                target_link_libraries(stdfs INTERFACE -lstdc++fs)
+                #target_link_libraries(stdfs INTERFACE -lc++fs)
+            endif()
+            if(NOT Filesystem_FOUND)
+                message(FATAL_ERROR "std::experimental::filesystem missing")
+            endif()
         endif()
     endmacro()
 
@@ -55,7 +58,7 @@ if(NOT DEFINED MLIB_DEPENDENCIES_CMAKE_INCLUDE_GUARD)
             message("-- OpenCV_Libraries:  ")
             PrintList("${OpenCV_LIBRARIES}" "    ")
         endif()
-               add_definitions(-DWITH_OPENCV)
+        add_definitions(-DWITH_OPENCV)
     endmacro()
 
 
