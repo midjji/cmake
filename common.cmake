@@ -7,9 +7,34 @@ cmake_minimum_required(VERSION 3.10)
 
 if(NOT DEFINED MLIB_COMMON_CMAKE_INCLUDE_GUARD)
     set(MLIB_COMMON_CMAKE_INCLUDE_GUARD TRUE)
+    macro(print_list name list)
+        message("${name}")
+        foreach(item IN LISTS ${list})
+            message("  -- ${item}")
+        endforeach()
+    endmacro()
 
+    macro(print_filenames name list)
+        message("${name}")
+        foreach(item IN LISTS ${list})
+            get_filename_component(filename ${item} NAME)
+            message("     ${filename}")
+        endforeach()
+    endmacro()
 
-
+    macro(display_library name includes libs) # maybe add defines
+        message("${name}")
+        set(tab "    ")
+        message("${tab}includes:")
+        foreach(item IN LISTS ${includes})
+            message("${tab}${tab}${item}")
+        endforeach()
+        message("${tab}libs:")
+        foreach(item IN LISTS ${libs})
+            message("${tab}${tab}${item}")
+        endforeach()
+        message("")
+    endmacro()
 
     if(CMAKE_COMPILER_IS_GNUCXX)  # GCC
         message("Compiling Using GCC: ${CMAKE_CXX_COMPILER}")
@@ -21,12 +46,12 @@ if(NOT DEFINED MLIB_COMMON_CMAKE_INCLUDE_GUARD)
 
 
     # add the cmake folder to module path for custom find scripts to likely positions
-
     LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/extern/mlib/extern/cmake" )
     LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/mlib/extern/cmake" )
     LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/extern/cmake" )
     LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" )
-
+    LIST(APPEND CMAKE_MODULE_PATH "/usr/local/lib/cmake/" )        
+    #print_list(CMAKE_MODULE_PATH CMAKE_MODULE_PATH) # uncomment to list where you are looking
 
 
 
@@ -46,7 +71,7 @@ if(NOT DEFINED MLIB_COMMON_CMAKE_INCLUDE_GUARD)
             WarningsConfig()
             add_compile_options(${WARNINGS})
         endif()
-        get_submodules()
+        #get_submodules()
         # ccache
         find_program(CCACHE_PROGRAM ccache)
         if(CCACHE_PROGRAM)
@@ -58,7 +83,7 @@ if(NOT DEFINED MLIB_COMMON_CMAKE_INCLUDE_GUARD)
     macro(get_submodules)# go download all the submodules
     find_package(Git REQUIRED)
     # Update submodules as needed
-    option(GIT_SUBMODULE "Check submodules during build" ON)
+    option(GIT_SUBMODULE "Check submodules during build" OFF)
     if(GIT_SUBMODULE)
         message(STATUS "Submodule update")
         execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
@@ -111,37 +136,44 @@ if(NOT DEFINED MLIB_COMMON_CMAKE_INCLUDE_GUARD)
         set(debug_flags ${common_flags})
         list(APPEND debug_flags -g ) # debug symbols
         list(APPEND debug_flags -pg ) # profiling
-        list(APPEND debug_flags -rdynamic ) # for names in informative asserts (backtrace)
+        # for names in informative asserts (backtrace)
+        # this one may be different between gcc and clang...
+        list(APPEND debug_flags -rdynamic )
         list(APPEND debug_flags -fno-omit-frame-pointer ) # for names in informative asserts (backtrace)
 
 
         # full release
         set(release_flags ${common_flags})
         list(APPEND release_flags -O3) # optimization level
-        list(APPEND release_flags -march=native) # use all instructions of this cpu
+        list(APPEND release_flags -march=native) # allowed to use all instructions of this cpu
+        list(APPEND release_flags -mtune=native) # acctually use all instructions of this cpu
         list(APPEND release_flags -DNDEBUG) # disable asserts
 
-        # release with asserts and symbols and exceptions
-        list(APPEND release_with_deb_info_flags -O1) # optimization level
-        list(APPEND release_with_deb_info_flags -march=native) # use all instructions of this cpu
-        list(APPEND release_with_deb_info_flags -g ) # debug symbols
-
-
         if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+            # be careful if you override these...
+            # add_compile_options( isnt an option, it forces the flags with no way to avoid them, crashing with cuda
+            # target_add_compile_otions would work though, but lets not...
             set(CMAKE_CXX_FLAGS_DEBUG "")
-            set(CMAKE_CXX_FLAGS_RELEASE "")
+            foreach(item IN LISTS debug_flags)
+                set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${item}")
+            endforeach()
 
-            if(CMAKE_BUILD_TYPE STREQUAL "Release")
-                add_compile_options(${release_flags})
-            elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
-                add_compile_options(${debug_flags})
-            elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
-                add_compile_options(${release_with_deb_infoflags})
-            endif()
+            set(CMAKE_CXX_FLAGS_RELEASE "")
+            foreach(item IN LISTS release_flags)
+                set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} ${item}")
+            endforeach()
+
+
         else()
-            message("TODO: fix opt options on this compiler")
+            message("TODO: fix opt options on this compiler, though the defaults are almost always good")
         endif()
 
+    endmacro()
+
+    macro(target_configure_optimization target)
+        # its generally better to let compile options be common,
+        # but I think thats what messes with cuda.
+        # im not sure how the optimizer behaves with both nvcc and cxx compilers
     endmacro()
 
     macro(target_configure_warnings target)
@@ -332,7 +364,7 @@ if(NOT DEFINED MLIB_COMMON_CMAKE_INCLUDE_GUARD)
                 list(APPEND warn -Woverloaded-virtual)
                 list(APPEND warn -Woverriding-method-mismatch)
                 list(APPEND warn -Wpacked)
-                list(APPEND warn -Wpadded)
+                #list(APPEND warn -Wpadded)
                 list(APPEND warn -Wparentheses)
 
 
@@ -458,11 +490,7 @@ if(NOT DEFINED MLIB_COMMON_CMAKE_INCLUDE_GUARD)
         endforeach()
     endmacro()
 
-    macro(PrintList list prepend)
-        foreach(el ${list})
-            message("${prepend} -- ${el}")
-        endforeach()
-    endmacro()
+
 
 
     MACRO(SUBDIRLIST result curdir)
@@ -539,34 +567,5 @@ if(NOT DEFINED MLIB_COMMON_CMAKE_INCLUDE_GUARD)
 
 
 
-
-    macro(print_list name list)
-        message("${name}")
-        foreach(item IN LISTS ${list})
-            message("     ${item}")
-        endforeach()
-    endmacro()
-
-    macro(print_filenames name list)
-        message("${name}")
-        foreach(item IN LISTS ${list})
-            get_filename_component(filename ${item} NAME)
-            message("     ${filename}")
-        endforeach()
-    endmacro()
-
-    macro(display_library name includes libs) # maybe add defines
-        message("${name}")
-        set(tab "    ")
-        message("${tab}includes:")
-        foreach(item IN LISTS ${includes})
-            message("${tab}${tab}${item}")
-        endforeach()
-        message("${tab}libs:")
-        foreach(item IN LISTS ${libs})
-            message("${tab}${tab}${item}")
-        endforeach()
-        message("")
-    endmacro()
-
 endif(NOT DEFINED MLIB_COMMON_CMAKE_INCLUDE_GUARD)
+
