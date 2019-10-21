@@ -60,6 +60,7 @@ if(NOT DEFINED MLIB_COMMON_CMAKE_INCLUDE_GUARD)
     macro(INIT_BUILD)
         # common options
         option(verbose "build system is verbose"  ON)
+        set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON) # default in windows already, should be default everywhere
         BuildConfig()
         OptimizationConfig()
         option(WError "Warnings are errors" OFF)
