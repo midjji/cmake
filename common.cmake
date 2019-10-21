@@ -82,10 +82,13 @@ if(NOT DEFINED MLIB_COMMON_CMAKE_INCLUDE_GUARD)
     endmacro()
 
     macro(get_submodules)# go download all the submodules
+
     find_package(Git REQUIRED)
     # Update submodules as needed
     option(GIT_SUBMODULE "Check submodules during build" OFF)
     if(GIT_SUBMODULE)
+        message("Warning: \ngit submodules should only be used for projects which you do not also develop, otherwise use git subtree, or better yet, a symlink to the clone of the lib. ")
+        message("Warning: \ngit submodules are inherently broken, and you will inevetably need to manually edit .git/ files ")
         message(STATUS "Submodule update")
         execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
