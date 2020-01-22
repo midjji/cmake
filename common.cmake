@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 # This file contains a bunch of commin things to do in cmake
 # example useage
-# include("cmake/common.cmake")
+#include("common.cmake")
 # INIT_BUILD() # set build type, opt flags and download submodules
 
 
@@ -50,7 +50,7 @@ if(NOT DEFINED MLIB_COMMON_CMAKE_INCLUDE_GUARD)
     LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/mlib/extern/cmake" )
     LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/extern/cmake" )
     LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" )
-    LIST(APPEND CMAKE_MODULE_PATH "/usr/local/lib/cmake/" )        
+    LIST(APPEND CMAKE_MODULE_PATH "/usr/local/lib/cmake/" )
     #print_list(CMAKE_MODULE_PATH CMAKE_MODULE_PATH) # uncomment to list where you are looking
 
 
@@ -83,20 +83,20 @@ if(NOT DEFINED MLIB_COMMON_CMAKE_INCLUDE_GUARD)
 
     macro(get_submodules)# go download all the submodules
 
-    find_package(Git REQUIRED)
-    # Update submodules as needed
-    option(GIT_SUBMODULE "Check submodules during build" OFF)
-    if(GIT_SUBMODULE)
-        message("Warning: \ngit submodules should only be used for projects which you do not also develop, otherwise use git subtree, or better yet, a symlink to the clone of the lib. ")
-        message("Warning: \ngit submodules are inherently broken, and you will inevetably need to manually edit .git/ files ")
-        message(STATUS "Submodule update")
-        execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-            RESULT_VARIABLE GIT_SUBMOD_RESULT)
-        if(NOT GIT_SUBMOD_RESULT EQUAL "0")
-            message(FATAL_ERROR "git submodule update --init failed with ${GIT_SUBMOD_RESULT}, please checkout submodules")
+        find_package(Git REQUIRED)
+        # Update submodules as needed
+        option(GIT_SUBMODULE "Check submodules during build" OFF)
+        if(GIT_SUBMODULE)
+            message("Warning: \ngit submodules should only be used for projects which you do not also develop, otherwise use git subtree, or better yet, a symlink to the clone of the lib. ")
+            message("Warning: \ngit submodules are inherently broken, and you will inevetably need to manually edit .git/ files ")
+            message(STATUS "Submodule update")
+            execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
+                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                RESULT_VARIABLE GIT_SUBMOD_RESULT)
+            if(NOT GIT_SUBMOD_RESULT EQUAL "0")
+                message(FATAL_ERROR "git submodule update --init failed with ${GIT_SUBMOD_RESULT}, please checkout submodules")
+            endif()
         endif()
-    endif()
     endmacro()
 
     # Build configuration
@@ -346,7 +346,7 @@ if(NOT DEFINED MLIB_COMMON_CMAKE_INCLUDE_GUARD)
                 list(APPEND warn -Wmissing-braces)
                 list(APPEND warn -Wmissing-field-initializers)
                 list(APPEND warn -Wmissing-method-return-type)
-                list(APPEND warn -Wmissing-noreturn)
+                #list(APPEND warn -Wmissing-noreturn)
 
                 list(APPEND warn -Wmissing-variable-declarations)
 
@@ -404,8 +404,8 @@ if(NOT DEFINED MLIB_COMMON_CMAKE_INCLUDE_GUARD)
 
                 list(APPEND warn -Wshift-sign-overflow)
 
-                list(APPEND warn -Wshorten-64-to-32)
-                list(APPEND warn -Wsign-compare)
+                list(APPEND warn -Wno-shorten-64-to-32)
+                list(APPEND warn -Wno-sign-compare)
 
                 list(APPEND warn -Wno-sign-conversion)
 
@@ -545,13 +545,13 @@ if(NOT DEFINED MLIB_COMMON_CMAKE_INCLUDE_GUARD)
 
     macro(testit name libs)
         if(BUILD_TESTING)
-        string(TOUPPER ${name} uname)
-        add_executable(test_${name} test_${name}.cpp)
-        foreach(item ${libs})
-            target_link_libraries(test_${name}  ${item})
-        endforeach()
-        add_test(TEST_${uname} test_${name} COMMAND TargetName)
-    endif()
+            string(TOUPPER ${name} uname)
+            add_executable(test_${name} test_${name}.cpp)
+            foreach(item ${libs})
+                target_link_libraries(test_${name}  ${item})
+            endforeach()
+            add_test(TEST_${uname} test_${name} COMMAND TargetName)
+        endif()
     endmacro()
 
 
