@@ -144,7 +144,7 @@ if(NOT DEFINED MLIB_COMMON_CMAKE_INCLUDE_GUARD)
         list(APPEND debug_flags -pg ) # profiling
         # for names in informative asserts (backtrace)
         # this one may be different between gcc and clang...
-        list(APPEND debug_flags -rdynamic )
+        #list(APPEND debug_flags -rdynamic )
         list(APPEND debug_flags -fno-omit-frame-pointer ) # for names in informative asserts (backtrace)
 
 
@@ -464,8 +464,10 @@ if(NOT DEFINED MLIB_COMMON_CMAKE_INCLUDE_GUARD)
                 list(APPEND warn -Wunused-variable)
                 list(APPEND warn -Wvariadic-macros)
                 list(APPEND warn -Wvector-conversion)
-                list(APPEND warn -Wweak-template-vtables)
-                list(APPEND warn -Wweak-vtables)
+
+                #list(APPEND warn -Wweak-template-vtables)
+                #list(APPEND warn -Wweak-vtables)
+
                 list(APPEND warn -Wzero-as-null-pointer-constant)
                 list(APPEND warn -Wzero-length-array)
 
@@ -481,7 +483,7 @@ if(NOT DEFINED MLIB_COMMON_CMAKE_INCLUDE_GUARD)
                 list(APPEND warn -Wcuda-compat)
 
                 # check specific to program version
-                list(APPEND warn -Wc++11-extensions)
+                #list(APPEND warn -Wc++11-extensions)
                 list(APPEND warn -Wc++17-compat-pedantic)
             endif()
         endif()
