@@ -52,6 +52,8 @@ if(NOT DEFINED MLIB_COMMON_CMAKE_INCLUDE_GUARD)
     LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/mlib/extern/cmake" )
     LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/extern/cmake" )
     LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" )
+    LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../cmake" )
+
     LIST(APPEND CMAKE_MODULE_PATH "/usr/local/lib/cmake/" )
     #print_list(CMAKE_MODULE_PATH CMAKE_MODULE_PATH) # uncomment to list where you are looking
 
@@ -243,8 +245,11 @@ if(NOT DEFINED MLIB_COMMON_CMAKE_INCLUDE_GUARD)
             list(APPEND warn -W)
             if(TRUE)
                 list(APPEND warn -Wall)
+
                 list(APPEND warn -Wextra)
                 list(APPEND warn -WCL4)
+
+                    if(FAlSE)
 
                 list(APPEND warn -Wabstract-vbase-init)
                 list(APPEND warn -Warc-maybe-repeated-use-of-weak)
@@ -481,7 +486,7 @@ if(NOT DEFINED MLIB_COMMON_CMAKE_INCLUDE_GUARD)
 
                 # cuda stuff!
                 list(APPEND warn -Wcuda-compat)
-
+            endif()
                 # check specific to program version
                 #list(APPEND warn -Wc++11-extensions)
                 list(APPEND warn -Wc++17-compat-pedantic)
