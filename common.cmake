@@ -7,6 +7,13 @@ cmake_minimum_required(VERSION 3.10)
 
 if(NOT DEFINED MLIB_COMMON_CMAKE_INCLUDE_GUARD)
     set(MLIB_COMMON_CMAKE_INCLUDE_GUARD TRUE)
+
+
+
+
+    # note get_filename_component(MLIB_TOP_PATH ../ ABSOLUTE) gives the path to dir above
+    # .. should never be in a path ever, it fucks up autocomplete
+
     macro(print_list name list)
         message("${name}")
         foreach(item IN LISTS ${list})
@@ -47,15 +54,6 @@ if(NOT DEFINED MLIB_COMMON_CMAKE_INCLUDE_GUARD)
     endif()
 
 
-    # add the cmake folder to module path for custom find scripts to likely positions
-    LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/extern/mlib/extern/cmake" )
-    LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/mlib/extern/cmake" )
-    LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/extern/cmake" )
-    LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake" )
-    LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../cmake" )
-
-    LIST(APPEND CMAKE_MODULE_PATH "/usr/local/lib/cmake/" )
-    #print_list(CMAKE_MODULE_PATH CMAKE_MODULE_PATH) # uncomment to list where you are looking
 
 
 
@@ -158,6 +156,7 @@ if(NOT DEFINED MLIB_COMMON_CMAKE_INCLUDE_GUARD)
         list(APPEND release_flags -DNDEBUG) # disable asserts
 
         if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+            #list(APPEND debug_flags " -fsanitize=memory -fsanitize-memory-track-origins -fno-omit-frame-pointer ")
             # be careful if you override these...
             # add_compile_options( isnt an option, it forces the flags with no way to avoid them, crashing with cuda
             # target_add_compile_otions would work though, but lets not...

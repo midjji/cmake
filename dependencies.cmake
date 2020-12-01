@@ -1,5 +1,5 @@
 
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.16)
 if(NOT DEFINED MLIB_DEPENDENCIES_CMAKE_INCLUDE_GUARD)
     set(DEFINED MLIB_DEPENDENCIES_CMAKE_INCLUDE_GUARD TRUE)
 
@@ -130,29 +130,6 @@ if(NOT DEFINED MLIB_DEPENDENCIES_CMAKE_INCLUDE_GUARD)
         message("Curses include directories: ${CURSES_INCLUDE_DIRS}")
         message("Curses libraries: ")
         print_list("${CURSES_LIBRARIES}" "    ")
-    endmacro()
-
-
-
-    macro(Find_Qt4)
-        message("\n${line}\n")
-        message("Qt4: \n")
-        find_package(Qt4 4.8.7 COMPONENTS QtCore QtGui QtXml REQUIRED)
-        set(CMAKE_AUTOMOC ON)
-        set(CMAKE_INCLUDE_CURRENT_DIR ON)
-        include(${QT_USE_FILE})
-        include_directories(${QT_INCLUDE_DIR})
-
-        message("\n -- Found Qt Version: ${QT_VERSION}")
-        list(APPEND EXTLIBS ${QT_LIBRARIES})
-        add_definitions("-DWITH_QT4")
-
-
-
-
-        message("Qt include directories: ${QT_INCLUDE_DIR}")
-        message("Qt libraries: ")
-        print_list("${QT_LIBRARIES}" "    ")
     endmacro()
 
 endif()
