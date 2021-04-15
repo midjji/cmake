@@ -62,7 +62,10 @@ if(NOT DEFINED MLIB_COMMON_CMAKE_INCLUDE_GUARD)
     macro(INIT_BUILD)
         # common options
         option(verbose "build system is verbose"  ON)
-        set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON) # default in windows already, should be default everywhere
+        # default in windows already, should be default everywhere
+        # if you want to hide shit, do it properly in a anonymous namespace
+        set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+
         BuildConfig()
         OptimizationConfig()
         option(WError "Warnings are errors" OFF)
@@ -148,12 +151,20 @@ if(NOT DEFINED MLIB_COMMON_CMAKE_INCLUDE_GUARD)
         list(APPEND debug_flags -fno-omit-frame-pointer ) # for names in informative asserts (backtrace)
 
 
+
+
         # full release
         set(release_flags ${common_flags})
         list(APPEND release_flags -O3) # optimization level
         list(APPEND release_flags -march=native) # allowed to use all instructions of this cpu
         list(APPEND release_flags -mtune=native) # acctually use all instructions of this cpu
         list(APPEND release_flags -DNDEBUG) # disable asserts
+        option(WITH_RELEASE_PROFILING "Release profiling has a performance cost" OFF)
+        if(WITH_RELEASE_PROFILING)
+            message("sudo apt install linux-tools-")
+            message("sudo sysctl -w kernel.perf_event_paranoid=-1, or maybe 1")
+            list(APPEND release_flags -pg) # disable asserts
+        endif()
 
         if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
             #list(APPEND debug_flags " -fsanitize=memory -fsanitize-memory-track-origins -fno-omit-frame-pointer ")
