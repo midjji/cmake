@@ -102,17 +102,6 @@ if(NOT DEFINED MLIB_DEPENDENCIES_CMAKE_INCLUDE_GUARD)
     endmacro()
 
 
-    macro(Find_Ceres)
-       message("\n${line}\n")
-       message("Ceres: \n")
-        find_package(Ceres 1.1 REQUIRED)
-        message("Warning changed from 1.14 to 1.1, may mess up daimler")
-        message("\n -- Found Ceres Version: ${CERES_VERSION}")
-        message("Ceres include directories: ")
-        print_list("${CERES_INCLUDE_DIRS}" "    ")
-        message("Ceres libraries: ${CERES_LIBRARIES}")
-    endmacro()
-
 
     macro(Find_Curses)
         message("\n${line}\n")
