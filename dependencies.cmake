@@ -51,6 +51,7 @@ if(NOT DEFINED MLIB_DEPENDENCIES_CMAKE_INCLUDE_GUARD)
         mark_as_advanced(FORCE CUDA_SEPARABLE_COMPILATION)
         mark_as_advanced(FORCE CUDA_TOOLKIT_ROOT_DIR)
         mark_as_advanced(FORCE CUDA_verbose_BUILD)
+        mark_as_advanced(FORCE CCACHE_PROGRAM)
 
         if(verbose)
             message("-- Include directories:")
@@ -58,7 +59,6 @@ if(NOT DEFINED MLIB_DEPENDENCIES_CMAKE_INCLUDE_GUARD)
             message("-- OpenCV_Libraries:  ")
             print_list("${OpenCV_LIBRARIES}" "    ")
         endif()
-        add_definitions(-DWITH_OPENCV)
     endmacro()
 
 
@@ -103,8 +103,8 @@ if(NOT DEFINED MLIB_DEPENDENCIES_CMAKE_INCLUDE_GUARD)
 
 
     macro(Find_Ceres)
-        message("\n${line}\n")
-        message("Ceres: \n")
+       message("\n${line}\n")
+       message("Ceres: \n")
         find_package(Ceres 1.1 REQUIRED)
         message("Warning changed from 1.14 to 1.1, may mess up daimler")
         message("\n -- Found Ceres Version: ${CERES_VERSION}")

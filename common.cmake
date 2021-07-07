@@ -64,6 +64,7 @@ if(NOT DEFINED MLIB_COMMON_CMAKE_INCLUDE_GUARD)
         option(verbose "build system is verbose"  ON)
         set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON) # default in windows already, should be default everywhere
         BuildConfig()
+        RANDOM_NUMBER_CONFIG()
         OptimizationConfig()
         option(WError "Warnings are errors" OFF)
         if(WError)
@@ -104,7 +105,7 @@ if(NOT DEFINED MLIB_COMMON_CMAKE_INCLUDE_GUARD)
     # Build configuration
     macro(BuildConfig)
 
-        set(default_build_type "Release")
+        set(default_build_type "RelWithDebInfo")
         if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
             message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
             set(CMAKE_BUILD_TYPE "${default_build_type}" CACHE
@@ -121,21 +122,30 @@ if(NOT DEFINED MLIB_COMMON_CMAKE_INCLUDE_GUARD)
 
     macro(OptimizationConfig)
 
+        # I am taking the wrong approach here,
+        # we should add flags, not remove existing...
+        # the flags to add are for debugging, debugsymbols and sanitizers
+
+
+
         set(common_flags "") # change to function to get the scope!
         option(WITH_RTTI "c++ rtti breaks dont pay for what you dont use, turn this off if possible" ON)
         if(NOT WITH_RTTI)
             list(APPEND common_flags -fno-rtti)
         endif()
+        mark_as_advanced(WITH_RTTI)
 
         option(WITH_EXCEPTIONS "c++ exceptions breaks static determination of upper time for functions, which is critical in rt systems, turn this off if possible" ON)
         if(NOT WITH_EXCEPTIONS)
             list(APPEND common_flags -fno-exceptions)
         endif()
+        mark_as_advanced(WITH_EXCEPTIONS)
 
         option(WITH_FASTMATH "speeds up floating point math, at the cost of that nans must no longer occur and less repeatable results" OFF)
         if(NOT WITH_EXCEPTIONS)
             list(APPEND common_flags -fffast-math)
         endif()
+        mark_as_advanced(WITH_FASTMATH)
 
         # basically three types
         # full debug
@@ -144,22 +154,27 @@ if(NOT DEFINED MLIB_COMMON_CMAKE_INCLUDE_GUARD)
         list(APPEND debug_flags -pg ) # profiling
         # for names in informative asserts (backtrace)
         # this one may be different between gcc and clang...
-        #list(APPEND debug_flags -rdynamic )
-        list(APPEND debug_flags -fno-omit-frame-pointer ) # for names in informative asserts (backtrace)
+        #list(APPEND debug_flags -rdynamic ) # gcc only, for names in informative asserts (backtrace)
+        list(APPEND sanitizer_flags -fno-omit-frame-pointer ) # for sanitizers
+        list(APPEND sanitizer_flags -fno-optimize-sibling-calls ) # for sanitizers
+        list(APPEND sanitizer_flags -fsanitize=memory ) # for sanitizers
+        list(APPEND sanitizer_flags -fsanitize-memory-track-origins ) # for sanitizers
+
+
+
+
 
 
         # full release
         set(release_flags ${common_flags})
         list(APPEND release_flags -O3) # optimization level
+        list(APPEND release_flags -DNDEBUG) # disable asserts, actually leave these in so you can see the damned asserts when they stop compiling...
         list(APPEND release_flags -march=native) # allowed to use all instructions of this cpu
-        list(APPEND release_flags -mtune=native) # acctually use all instructions of this cpu
-        list(APPEND release_flags -DNDEBUG) # disable asserts
+        list(APPEND release_flags -mtune=native) # actually use all instructions of this cpu
+
 
         if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-            #list(APPEND debug_flags " -fsanitize=memory -fsanitize-memory-track-origins -fno-omit-frame-pointer ")
-            # be careful if you override these...
-            # add_compile_options( isnt an option, it forces the flags with no way to avoid them, crashing with cuda
-            # target_add_compile_otions would work though, but lets not...
+
             set(CMAKE_CXX_FLAGS_DEBUG "")
             foreach(item IN LISTS debug_flags)
                 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${item}")
@@ -248,244 +263,267 @@ if(NOT DEFINED MLIB_COMMON_CMAKE_INCLUDE_GUARD)
                 list(APPEND warn -Wextra)
                 list(APPEND warn -WCL4)
 
-                    if(FAlSE)
+                if(FAlSE)
 
-                list(APPEND warn -Wabstract-vbase-init)
-                list(APPEND warn -Warc-maybe-repeated-use-of-weak)
-                list(APPEND warn -Warc-repeated-use-of-weak)
-                list(APPEND warn -Warray-bounds-pointer-arithmetic)
-                list(APPEND warn -Wassign-enum)
+                    list(APPEND warn -Wabstract-vbase-init)
+                    list(APPEND warn -Warc-maybe-repeated-use-of-weak)
+                    list(APPEND warn -Warc-repeated-use-of-weak)
+                    list(APPEND warn -Warray-bounds-pointer-arithmetic)
+                    list(APPEND warn -Wassign-enum)
 
-                list(APPEND warn -Watomic-properties)
-                list(APPEND warn -Wauto-import)
-                list(APPEND warn -Wbad-function-cast)
-                list(APPEND warn -Wbitfield-enum-conversion)
-                list(APPEND warn -Wbitwise-op-parentheses)
-
-
-                # specical ones!
-                list(APPEND warn -Wcast-align)
-                list(APPEND warn -Wcast-qual)
+                    list(APPEND warn -Watomic-properties)
+                    list(APPEND warn -Wauto-import)
+                    list(APPEND warn -Wbad-function-cast)
+                    list(APPEND warn -Wbitfield-enum-conversion)
+                    list(APPEND warn -Wbitwise-op-parentheses)
 
 
-
-                list(APPEND warn -Wchar-subscripts)
-                list(APPEND warn -Wcomma)
-                list(APPEND warn -Wconditional-type-mismatch)
-                list(APPEND warn -Wconditional-uninitialized)
-                list(APPEND warn -Wconfig-macros)
-                list(APPEND warn -Wconstant-conversion)
-                list(APPEND warn -Wconsumed)
-                list(APPEND warn -Wconversion)
-
-                list(APPEND warn -Wcustom-atomic-properties)
-                list(APPEND warn -Wdate-time)
-
-                list(APPEND warn -Wdelete-non-virtual-dtor)
-                #list(APPEND warn -Wdeprecated)
-                list(APPEND warn -Wno-deprecated-declarations)
-                list(APPEND warn -Wdeprecated-dynamic-exception-spec)
-                list(APPEND warn -Wdeprecated-implementations)
-
-                list(APPEND warn -Wdirect-ivar-access)
-                list(APPEND warn -Wdisabled-macro-expansion)
-                #list(APPEND warn -Wdocumentation)
-                list(APPEND warn -Wduplicate-enum)
-                list(APPEND warn -Wduplicate-method-arg)
-                list(APPEND warn -Wduplicate-method-match)
-                #list(APPEND warn -Weffc++)
-                list(APPEND warn -Wembedded-directive)
-
-                list(APPEND warn -Wempty-translation-unit)
-                list(APPEND warn -Wexpansion-to-defined)
-
-                list(APPEND warn -Wexperimental-isel)
-                list(APPEND warn -Wexplicit-ownership-type)
-                list(APPEND warn -Wextra-semi)
+                    # specical ones!
+                    list(APPEND warn -Wcast-align)
+                    list(APPEND warn -Wcast-qual)
 
 
-                list(APPEND warn -Wflexible-array-extensions)
-                list(APPEND warn -Wfloat-conversion)
-                #list(APPEND warn -Wfloat-equal)
-                list(APPEND warn -Wfloat-overflow-conversion)
-                list(APPEND warn -Wfloat-zero-conversion)
 
-                list(APPEND warn -Wfor-loop-analysis)
-                list(APPEND warn -Wformat-nonliteral)
-                list(APPEND warn -Wformat-non-iso)
-                list(APPEND warn -Wformat-pedantic)
-                list(APPEND warn -Wfour-char-constants)
-                option(Warn_on_globals "Warn on globals" OFF)
-                if(Warn_on_globals)
-                    list(APPEND warn -Wglobal-constructors)
+                    list(APPEND warn -Wchar-subscripts)
+                    list(APPEND warn -Wcomma)
+                    list(APPEND warn -Wconditional-type-mismatch)
+                    list(APPEND warn -Wconditional-uninitialized)
+                    list(APPEND warn -Wconfig-macros)
+                    list(APPEND warn -Wconstant-conversion)
+                    list(APPEND warn -Wconsumed)
+                    list(APPEND warn -Wconversion)
+
+                    list(APPEND warn -Wcustom-atomic-properties)
+                    list(APPEND warn -Wdate-time)
+
+                    list(APPEND warn -Wdelete-non-virtual-dtor)
+                    #list(APPEND warn -Wdeprecated)
+                    list(APPEND warn -Wno-deprecated-declarations)
+                    list(APPEND warn -Wdeprecated-dynamic-exception-spec)
+                    list(APPEND warn -Wdeprecated-implementations)
+
+                    list(APPEND warn -Wdirect-ivar-access)
+                    list(APPEND warn -Wdisabled-macro-expansion)
+                    #list(APPEND warn -Wdocumentation)
+                    list(APPEND warn -Wduplicate-enum)
+                    list(APPEND warn -Wduplicate-method-arg)
+                    list(APPEND warn -Wduplicate-method-match)
+                    #list(APPEND warn -Weffc++)
+                    list(APPEND warn -Wembedded-directive)
+
+                    list(APPEND warn -Wempty-translation-unit)
+                    list(APPEND warn -Wexpansion-to-defined)
+
+                    list(APPEND warn -Wexperimental-isel)
+                    list(APPEND warn -Wexplicit-ownership-type)
+                    list(APPEND warn -Wextra-semi)
+
+
+                    list(APPEND warn -Wflexible-array-extensions)
+                    list(APPEND warn -Wfloat-conversion)
+                    #list(APPEND warn -Wfloat-equal)
+                    list(APPEND warn -Wfloat-overflow-conversion)
+                    list(APPEND warn -Wfloat-zero-conversion)
+
+                    list(APPEND warn -Wfor-loop-analysis)
+                    list(APPEND warn -Wformat-nonliteral)
+                    list(APPEND warn -Wformat-non-iso)
+                    list(APPEND warn -Wformat-pedantic)
+                    list(APPEND warn -Wfour-char-constants)
+                    option(Warn_on_globals "Warn on globals" OFF)
+                    if(Warn_on_globals)
+                        list(APPEND warn -Wglobal-constructors)
+                    endif()
+
+
+                    list(APPEND warn -Wgnu)
+
+                    list(APPEND warn -Wheader-guard)
+                    list(APPEND warn -Wheader-hygiene)
+                    list(APPEND warn -Widiomatic-parentheses)
+                    list(APPEND warn -Wignored-qualifiers)
+                    list(APPEND warn -Wimplicit-atomic-properties)
+                    list(APPEND warn -Wimplicit)
+                    list(APPEND warn -Wimplicit-fallthrough)
+
+                    list(APPEND warn -Wimplicit-function-declaration)
+
+
+                    list(APPEND warn -Wimplicit-retain-self)
+                    list(APPEND warn -Wimport-preprocessor-directive-pedantic)
+
+
+                    list(APPEND warn -Winconsistent-dllimport)
+                    list(APPEND warn -Winconsistent-missing-destructor-override)
+                    list(APPEND warn -Winfinite-recursion)
+                    list(APPEND warn -Winvalid-or-nonexistent-directory)
+                    list(APPEND warn -Wkeyword-macro)
+                    list(APPEND warn -Wlanguage-extension-token)
+
+                    list(APPEND warn -Wlogical-op-parentheses)
+                    list(APPEND warn -Wmain)
+                    list(APPEND warn -Wmethod-signatures)
+                    list(APPEND warn -Wmismatched-tags)
+                    list(APPEND warn -Wmissing-braces)
+                    list(APPEND warn -Wmissing-field-initializers)
+                    list(APPEND warn -Wmissing-method-return-type)
+                    #list(APPEND warn -Wmissing-noreturn)
+
+                    list(APPEND warn -Wmissing-variable-declarations)
+
+                    list(APPEND warn -Wmost)
+                    list(APPEND warn -Wmove)
+                    list(APPEND warn -Wnewline-eof)
+                    list(APPEND warn -Wnon-gcc)
+                    list(APPEND warn -Wnon-virtual-dtor)
+                    list(APPEND warn -Wnonportable-system-include-path)
+                    list(APPEND warn -Wnull-pointer-arithmetic)
+                    list(APPEND warn -Wnullable-to-nonnull-conversion)
+                    list(APPEND warn -Wobjc-interface-ivars)
+                    list(APPEND warn -Wobjc-messaging-id)
+                    list(APPEND warn -Wobjc-missing-property-synthesis)
+
+                    #list(APPEND warn -Wold-style-cast)
+                    list(APPEND warn -Wover-aligned)
+                    list(APPEND warn -Woverlength-strings)
+                    list(APPEND warn -Woverloaded-virtual)
+                    list(APPEND warn -Woverriding-method-mismatch)
+                    list(APPEND warn -Wpacked)
+                    #list(APPEND warn -Wpadded)
+                    list(APPEND warn -Wparentheses)
+
+
+                    list(APPEND warn -Wpessimizing-move)
+                    list(APPEND warn -Wpointer-arith)
+
+                    list(APPEND warn -Wpragma-pack)
+                    list(APPEND warn -Wpragma-pack-suspicious-include)
+                    list(APPEND warn -Wprofile-instr-missing)
+
+                    list(APPEND warn -Wrange-loop-analysis)
+                    list(APPEND warn -Wredundant-move)
+                    list(APPEND warn -Wredundant-parens)
+                    list(APPEND warn -Wreorder)
+                    list(APPEND warn -Wreserved-id-macro)
+                    list(APPEND warn -Wretained-language-linkage)
+                    list(APPEND warn -Wreserved-user-defined-literal)
+
+                    list(APPEND warn -Wselector)
+                    list(APPEND warn -Wself-assign)
+                    list(APPEND warn -Wself-move)
+                    list(APPEND warn -Wsemicolon-before-method-body)
+
+
+                    #list(APPEND warn -Wshadow-all)
+                    list(APPEND warn -Wshadow)
+                    list(APPEND warn -Wshadow-field)
+                    #list(APPEND warn -Wshadow-field-in-constructor)
+                    list(APPEND warn -Wshadow-uncaptured-local)
+                    list(APPEND warn -Wshadow-field-in-constructor-modified)
+
+
+
+                    list(APPEND warn -Wshift-sign-overflow)
+
+                    list(APPEND warn -Wno-shorten-64-to-32)
+                    list(APPEND warn -Wno-sign-compare)
+
+                    list(APPEND warn -Wno-sign-conversion)
+                    macro(print_list name list)
+                        message("\n Listing: ${name}\n")
+                        foreach(item IN LISTS ${list})
+                            message("     ${name}: ${item}")
+                        endforeach()
+                        message("\n Listing: ${name} - done \n")
+                    endmacro()
+
+                    if(NOT CMAKE_BUILD_TYPE)
+                        MESSAGE("-- No build type specified; defaulting to CMAKE_BUILD_TYPE=Release.")
+                        set(CMAKE_BUILD_TYPE Release CACHE STRING
+                            "Choose the type of build, options are: Debug, Release"  FORCE)
+                    else()
+                        if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+                            MESSAGE("\n${line}")
+                            MESSAGE("\n-- Build type: Debug. Performance will be terrible!")
+                            MESSAGE("-- Add -DCMAKE_BUILD_TYPE=Release to the CMake command line to get an optimized build.")
+                            MESSAGE("\n${line}")
+                        endif()
+                    endif()
+                    # add warnings
+                    #set(WARN "-Wall -Wextra -Wpedantic -Werror")
+                    set(CMAKE_CXX_FLAGS_DEBUG " -fno-omit-frame-pointer -g -pg  -rdynamic ${WARN} ") # dynamic is for the improved asserts
+                    set(CMAKE_CXX_FLAGS_RELEASE " -O3 -march=native -DNDEBUG ${WARN} ")
+                    list(APPEND warn -Wsigned-enum-bitfield)
+                    list(APPEND warn -Wsometimes-uninitialized)
+                    list(APPEND warn -Wspir-compat)
+                    list(APPEND warn -Wstatic-in-inline)
+                    list(APPEND warn -Wstrict-prototypes)
+                    list(APPEND warn -Wstrict-selector-match)
+                    list(APPEND warn -Wstring-conversion)
+                    list(APPEND warn -Wsuper-class-method-mismatch)
+                    list(APPEND warn -Wswitch-enum)
+                    list(APPEND warn -Wtautological-compare)
+                    list(APPEND warn -Wtautological-constant-in-range-compare)
+                    list(APPEND warn -Wtautological-overlap-compare)
+
+                    list(APPEND warn -Wthread-safety)
+
+                    list(APPEND warn -Wthread-safety-negative)
+                    list(APPEND warn -Wthread-safety-verbose)
+                    list(APPEND warn -Wthread-safety-beta)
+
+                    list(APPEND warn -Wtrigraphs)
+                    list(APPEND warn -Wundeclared-selector)
+                    list(APPEND warn -Wundef)
+                    list(APPEND warn -Wundefined-func-template)
+                    list(APPEND warn -Wundefined-inline)
+                    list(APPEND warn -Wundefined-internal-type)
+                    list(APPEND warn -Wundefined-reinterpret-cast)
+                    list(APPEND warn -Wuninitialized)
+                    list(APPEND warn -Wunknown-escape-sequence)
+                    list(APPEND warn -Wunknown-pragmas)
+                    list(APPEND warn -Wunknown-sanitizers)
+                    list(APPEND warn -Wunknown-warning-option)
+                    list(APPEND warn -Wunneeded-internal-declaration)
+                    list(APPEND warn -Wunneeded-member-function)
+                    list(APPEND warn -Wunreachable-code)
+                    list(APPEND warn -Wunreachable-code-aggressive)
+                    list(APPEND warn -Wunused)
+                    list(APPEND warn -Wunused-const-variable)
+                    list(APPEND warn -Wunused-exception-parameter)
+                    list(APPEND warn -Wunused-function)
+                    list(APPEND warn -Wunused-label)
+                    list(APPEND warn -Wunused-lambda-capture)
+                    list(APPEND warn -Wunused-local-typedef)
+                    list(APPEND warn -Wunused-macros)
+                    list(APPEND warn -Wunused-member-function)
+                    list(APPEND warn -Wunused-parameter)
+                    list(APPEND warn -Wunused-private-field)
+                    list(APPEND warn -Wunused-property-ivar)
+                    list(APPEND warn -Wunused-template)
+                    list(APPEND warn -Wunused-value)
+                    list(APPEND warn -Wused-but-marked-unused)
+                    list(APPEND warn -Wunused-variable)
+                    list(APPEND warn -Wvariadic-macros)
+                    list(APPEND warn -Wvector-conversion)
+
+                    #list(APPEND warn -Wweak-template-vtables)
+                    #list(APPEND warn -Wweak-vtables)
+
+                    list(APPEND warn -Wzero-as-null-pointer-constant)
+                    list(APPEND warn -Wzero-length-array)
+
+
+                    list(APPEND warn-Rremark-backend-plugin)
+                    list(APPEND warn-Rsanitize-address)
+
+                    list(APPEND warn -Rmodule-build)
+                    list(APPEND warn -Rpass)
+                    list(APPEND warn -Rpass-analysis)
+
+                    # cuda stuff!
+                    list(APPEND warn -Wcuda-compat)
                 endif()
-
-
-                list(APPEND warn -Wgnu)
-
-                list(APPEND warn -Wheader-guard)
-                list(APPEND warn -Wheader-hygiene)
-                list(APPEND warn -Widiomatic-parentheses)
-                list(APPEND warn -Wignored-qualifiers)
-                list(APPEND warn -Wimplicit-atomic-properties)
-                list(APPEND warn -Wimplicit)
-                list(APPEND warn -Wimplicit-fallthrough)
-
-                list(APPEND warn -Wimplicit-function-declaration)
-
-
-                list(APPEND warn -Wimplicit-retain-self)
-                list(APPEND warn -Wimport-preprocessor-directive-pedantic)
-
-
-                list(APPEND warn -Winconsistent-dllimport)
-                list(APPEND warn -Winconsistent-missing-destructor-override)
-                list(APPEND warn -Winfinite-recursion)
-                list(APPEND warn -Winvalid-or-nonexistent-directory)
-                list(APPEND warn -Wkeyword-macro)
-                list(APPEND warn -Wlanguage-extension-token)
-
-                list(APPEND warn -Wlogical-op-parentheses)
-                list(APPEND warn -Wmain)
-                list(APPEND warn -Wmethod-signatures)
-                list(APPEND warn -Wmismatched-tags)
-                list(APPEND warn -Wmissing-braces)
-                list(APPEND warn -Wmissing-field-initializers)
-                list(APPEND warn -Wmissing-method-return-type)
-                #list(APPEND warn -Wmissing-noreturn)
-
-                list(APPEND warn -Wmissing-variable-declarations)
-
-                list(APPEND warn -Wmost)
-                list(APPEND warn -Wmove)
-                list(APPEND warn -Wnewline-eof)
-                list(APPEND warn -Wnon-gcc)
-                list(APPEND warn -Wnon-virtual-dtor)
-                list(APPEND warn -Wnonportable-system-include-path)
-                list(APPEND warn -Wnull-pointer-arithmetic)
-                list(APPEND warn -Wnullable-to-nonnull-conversion)
-                list(APPEND warn -Wobjc-interface-ivars)
-                list(APPEND warn -Wobjc-messaging-id)
-                list(APPEND warn -Wobjc-missing-property-synthesis)
-
-                #list(APPEND warn -Wold-style-cast)
-                list(APPEND warn -Wover-aligned)
-                list(APPEND warn -Woverlength-strings)
-                list(APPEND warn -Woverloaded-virtual)
-                list(APPEND warn -Woverriding-method-mismatch)
-                list(APPEND warn -Wpacked)
-                #list(APPEND warn -Wpadded)
-                list(APPEND warn -Wparentheses)
-
-
-                list(APPEND warn -Wpessimizing-move)
-                list(APPEND warn -Wpointer-arith)
-
-                list(APPEND warn -Wpragma-pack)
-                list(APPEND warn -Wpragma-pack-suspicious-include)
-                list(APPEND warn -Wprofile-instr-missing)
-
-                list(APPEND warn -Wrange-loop-analysis)
-                list(APPEND warn -Wredundant-move)
-                list(APPEND warn -Wredundant-parens)
-                list(APPEND warn -Wreorder)
-                list(APPEND warn -Wreserved-id-macro)
-                list(APPEND warn -Wretained-language-linkage)
-                list(APPEND warn -Wreserved-user-defined-literal)
-
-                list(APPEND warn -Wselector)
-                list(APPEND warn -Wself-assign)
-                list(APPEND warn -Wself-move)
-                list(APPEND warn -Wsemicolon-before-method-body)
-
-
-                #list(APPEND warn -Wshadow-all)
-                list(APPEND warn -Wshadow)
-                list(APPEND warn -Wshadow-field)
-                #list(APPEND warn -Wshadow-field-in-constructor)
-                list(APPEND warn -Wshadow-uncaptured-local)
-                list(APPEND warn -Wshadow-field-in-constructor-modified)
-
-
-
-                list(APPEND warn -Wshift-sign-overflow)
-
-                list(APPEND warn -Wno-shorten-64-to-32)
-                list(APPEND warn -Wno-sign-compare)
-
-                list(APPEND warn -Wno-sign-conversion)
-
-                list(APPEND warn -Wsigned-enum-bitfield)
-                list(APPEND warn -Wsometimes-uninitialized)
-                list(APPEND warn -Wspir-compat)
-                list(APPEND warn -Wstatic-in-inline)
-                list(APPEND warn -Wstrict-prototypes)
-                list(APPEND warn -Wstrict-selector-match)
-                list(APPEND warn -Wstring-conversion)
-                list(APPEND warn -Wsuper-class-method-mismatch)
-                list(APPEND warn -Wswitch-enum)
-                list(APPEND warn -Wtautological-compare)
-                list(APPEND warn -Wtautological-constant-in-range-compare)
-                list(APPEND warn -Wtautological-overlap-compare)
-
-                list(APPEND warn -Wthread-safety)
-
-                list(APPEND warn -Wthread-safety-negative)
-                list(APPEND warn -Wthread-safety-verbose)
-                list(APPEND warn -Wthread-safety-beta)
-
-                list(APPEND warn -Wtrigraphs)
-                list(APPEND warn -Wundeclared-selector)
-                list(APPEND warn -Wundef)
-                list(APPEND warn -Wundefined-func-template)
-                list(APPEND warn -Wundefined-inline)
-                list(APPEND warn -Wundefined-internal-type)
-                list(APPEND warn -Wundefined-reinterpret-cast)
-                list(APPEND warn -Wuninitialized)
-                list(APPEND warn -Wunknown-escape-sequence)
-                list(APPEND warn -Wunknown-pragmas)
-                list(APPEND warn -Wunknown-sanitizers)
-                list(APPEND warn -Wunknown-warning-option)
-                list(APPEND warn -Wunneeded-internal-declaration)
-                list(APPEND warn -Wunneeded-member-function)
-                list(APPEND warn -Wunreachable-code)
-                list(APPEND warn -Wunreachable-code-aggressive)
-                list(APPEND warn -Wunused)
-                list(APPEND warn -Wunused-const-variable)
-                list(APPEND warn -Wunused-exception-parameter)
-                list(APPEND warn -Wunused-function)
-                list(APPEND warn -Wunused-label)
-                list(APPEND warn -Wunused-lambda-capture)
-                list(APPEND warn -Wunused-local-typedef)
-                list(APPEND warn -Wunused-macros)
-                list(APPEND warn -Wunused-member-function)
-                list(APPEND warn -Wunused-parameter)
-                list(APPEND warn -Wunused-private-field)
-                list(APPEND warn -Wunused-property-ivar)
-                list(APPEND warn -Wunused-template)
-                list(APPEND warn -Wunused-value)
-                list(APPEND warn -Wused-but-marked-unused)
-                list(APPEND warn -Wunused-variable)
-                list(APPEND warn -Wvariadic-macros)
-                list(APPEND warn -Wvector-conversion)
-
-                #list(APPEND warn -Wweak-template-vtables)
-                #list(APPEND warn -Wweak-vtables)
-
-                list(APPEND warn -Wzero-as-null-pointer-constant)
-                list(APPEND warn -Wzero-length-array)
-
-
-                list(APPEND warn-Rremark-backend-plugin)
-                list(APPEND warn-Rsanitize-address)
-
-                list(APPEND warn -Rmodule-build)
-                list(APPEND warn -Rpass)
-                list(APPEND warn -Rpass-analysis)
-
-                # cuda stuff!
-                list(APPEND warn -Wcuda-compat)
-            endif()
                 # check specific to program version
                 #list(APPEND warn -Wc++11-extensions)
                 list(APPEND warn -Wc++17-compat-pedantic)
@@ -521,8 +559,7 @@ if(NOT DEFINED MLIB_COMMON_CMAKE_INCLUDE_GUARD)
 
 
     macro(RANDOM_NUMBER_CONFIG)
-        option(RANDOM_SEED_FROM_TIME "generate a seed from time, default" ON)
-        list(APPEND RANDOM_DISPLAY "RANDOM_SEED_FROM_TIME: ${RANDOM_SEED_FROM_TIME}")
+        option(RANDOM_SEED_FROM_TIME "generate a seed from time, default" OFF)
         if(NOT RANDOM_SEED_FROM_TIME)
             set(RANDOM_SEED "123" CACHE STRING "enter the string generated by a previous run"  FORCE)
             list(APPEND RANDOM_DISPLAY "RANDOM_SEED: ${RANDOM_SEED}")
@@ -538,7 +575,6 @@ if(NOT DEFINED MLIB_COMMON_CMAKE_INCLUDE_GUARD)
         if(verbose)
             message("${line}")
             message("Random number options:")
-            printlist("${RANDOM_DISPLAY}" "    ")
         endif()
     endmacro()
 
