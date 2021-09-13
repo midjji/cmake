@@ -578,17 +578,16 @@ if(NOT DEFINED MLIB_COMMON_CMAKE_INCLUDE_GUARD)
             list(APPEND RANDOM_DISPLAY "RANDOM_SEED: ${RANDOM_SEED}")
         endif()
 
-
+        message("")
+        message("Random numbers:")
         if(RANDOM_SEED_FROM_TIME)
+            message("    Using random seed from time")
             add_definitions(-DRANDOM_SEED_FROM_TIME)
         else()
+            message("    Using random seed: ${RANDOM_SEED}")
             add_definitions(-DRANDOM_SEED_VALUE=${RANDOM_SEED})
         endif()
-
-        if(verbose)
-            message("${line}")
-            message("Random number options:")
-        endif()
+        message("")
     endmacro()
 
     macro(add_subdirectory_if_exists dir)

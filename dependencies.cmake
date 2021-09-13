@@ -37,12 +37,8 @@ if(NOT DEFINED MLIB_DEPENDENCIES_CMAKE_INCLUDE_GUARD)
 
 
     macro(Find_OpenCV)
-        message("\n${line}\n")
-        message("OpenCV 4\n")
+        message("${line}")
         find_package( OpenCV 4 REQUIRED)
-
-        message("-- Found OpenCV version ${OpenCV_VERSION}")
-        set(OpenCV_LIBRARIES ${OpenCV_LIBS} )# fixes the name
         # pulls in cuda options, mark them as advanced...
         mark_as_advanced(FORCE CUDA_BUILD_CUBIN)
         mark_as_advanced(FORCE CUDA_BUILD_EMULATION)
@@ -53,54 +49,19 @@ if(NOT DEFINED MLIB_DEPENDENCIES_CMAKE_INCLUDE_GUARD)
         mark_as_advanced(FORCE CUDA_verbose_BUILD)
         mark_as_advanced(FORCE CCACHE_PROGRAM)
 
-        if(verbose)
-            message("-- Include directories:")
-            print_list(${OpenCV_INCLUDE_DIRS} "    ")
-            message("-- OpenCV_Libraries:  ")
-            print_list("${OpenCV_LIBRARIES}" "    ")
+
+        set(OpenCV_LIBRARIES ${OpenCV_LIBS} )# fixes the name
+        add_library(opencv INTERFACE )
+        # opencv will possibly fix this at some point...
+        target_link_libraries(opencv INTERFACE ${OpenCV_LIBS})
+        target_include_directories(opencv INTERFACE ${OpenCV_INCLUDE_DIRS})
+        message("Found OpenCV Version ${OpenCV_VERSION}, created target opencv")
+        if(verbose)            
+            print_list("OpenCV include directories:" OpenCV_INCLUDE_DIRS)
+            print_list("OpenCV libraries:  " OpenCV_LIBRARIES)
         endif()
+        # this also makes the targets
     endmacro()
-
-
-
-    macro(FIND_OSG)
-        message("\n${line}\n")
-        message("OSG\n")
-        find_package(OpenSceneGraph 3 REQUIRED osgDB osgUtil osgViewer osgGA osgWidget REQUIRED)
-
-        message("\nFound OSG Version: ${OPENSCENEGRAPH_VERSION}")
-        add_definitions(-DWITH_OSG)
-
-        mark_as_advanced(FORCE OPENTHREADS_INCLUDE_DIR)
-        mark_as_advanced(FORCE OPENTHREADS_LIBRARY)
-        mark_as_advanced(FORCE OPENTHREADS_LIBRARY_DEBUG)
-        mark_as_advanced(FORCE OSGDB_INCLUDE_DIR)
-        mark_as_advanced(FORCE OSGDB_LIBRARY     )
-        mark_as_advanced(FORCE OSGDB_LIBRARY_DEBUG)
-        mark_as_advanced(FORCE OSGGA_INCLUDE_DIR   )
-        mark_as_advanced(FORCE OSGGA_LIBRARY        )
-        mark_as_advanced(FORCE OSGGA_LIBRARY_DEBUG   )
-        mark_as_advanced(FORCE OSGUTIL_INCLUDE_DIR )
-        mark_as_advanced(FORCE OSGUTIL_LIBRARY      )
-        mark_as_advanced(FORCE OSGUTIL_LIBRARY_DEBUG )
-        mark_as_advanced(FORCE OSGVIEWER_INCLUDE_DIR  )
-        mark_as_advanced(FORCE OSGVIEWER_LIBRARY       )
-        mark_as_advanced(FORCE OSGVIEWER_LIBRARY_DEBUG  )
-        mark_as_advanced(FORCE OSGWIDGET_INCLUDE_DIR  )
-        mark_as_advanced(FORCE OSGWIDGET_LIBRARY )
-        mark_as_advanced(FORCE OSGWIDGET_LIBRARY_DEBUG   )
-        mark_as_advanced(FORCE OSG_INCLUDE_DIR  )
-        mark_as_advanced(FORCE OSG_LIBRARY         )
-        mark_as_advanced(FORCE OSG_LIBRARY_DEBUG)
-
-
-        if(verbose)
-            message("OpenSceneGraph include directories: ${OPENSCENEGRAPH_INCLUDE_DIR}")
-            message("OpenSceneGraph libraries: ")
-            print_list("${OPENSCENEGRAPH_LIBRARIES}" "    ")
-        endif()
-    endmacro()
-
 
 
     macro(Find_Curses)

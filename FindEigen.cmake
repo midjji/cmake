@@ -1,3 +1,4 @@
+if(FALSE)
 # Ceres Solver - A fast non-linear least squares minimizer
 # Copyright 2013 Google Inc. All rights reserved.
 # http://code.google.com/p/ceres-solver/
@@ -158,3 +159,4 @@ FIND_PACKAGE_HANDLE_STANDARD_ARGS(Eigen
 IF (EIGEN_FOUND)
   MARK_AS_ADVANCED(FORCE EIGEN_INCLUDE_DIR)
 ENDIF (EIGEN_FOUND)
+endif()
